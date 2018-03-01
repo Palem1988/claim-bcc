@@ -4,7 +4,7 @@ import Home from './HomeComponent';
 import Send from './SendComponent';
 import Log from './LogComponent';
 
-import { getBitcoinCashPathFromIndex, getSplitBlock } from '../utils/utils';
+import { getBitcoinCashPathFromIndex, getSplitBlock, isSegwitPath } from '../utils/utils';
 import data from '../utils/data';
 
 
@@ -135,8 +135,8 @@ export default class App extends Component {
         if (index >= 0) {
             const addr = trezorAccounts[index];
             const account = accounts[activeAccount];
-            const isSegwit = this.state.destinationAccount.id === 'btcX' ? true : account.segwit;
-            TrezorConnect.getAddress(addr.path, originAccount.txType, isSegwit, (response) => {
+            const isSegwit = this.state.destinationAccount.id === 'btcX' ? true : isSegwitPath(addr.path);
+            TrezorConnect.getAddress(addr.path, originAccount.txType, true, (response) => {
                 //console.log("TrezorConnect.getAddress response", response);
             });
         }

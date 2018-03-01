@@ -37,6 +37,10 @@ export function getSerializedPath(path: Array<number>): string {
     }).join('/');
 }
 
+export function isSegwitPath(path: Array<number>): boolean {
+    return (path[0] & ~HD_HARDENED) === 49;
+}
+
 export function getBitcoinCashPathFromIndex(index: number): Array<number> {
     return [
         (44 | HD_HARDENED) >>> 0,
