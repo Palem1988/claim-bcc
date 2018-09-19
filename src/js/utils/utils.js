@@ -39,8 +39,9 @@ export function getSerializedPath(path: Array<number>): string {
 
 export function isTrezorAccount(trezorAccounts, usedAccounts, address): boolean {
     let accounts = [...trezorAccounts, ...usedAccounts];
-    for(let account of accounts) {
-        if(account.address === address) {
+    for (let account of accounts) {
+        // if(account.address === address) {
+        if (account.unusedAddresses.indexOf(address) >= 0) {
             return true;
         }
     }
@@ -49,9 +50,11 @@ export function isTrezorAccount(trezorAccounts, usedAccounts, address): boolean 
 
 export function trezorAccountLabel(trezorAccounts, address): string {
     let accounts = [...trezorAccounts];
-    for(let account of accounts) {
-        if(account.address === address) {
-            return account.name;
+    for (let account of accounts) {
+        // if(account.address === address) {
+        const index = account.unusedAddresses.indexOf(address);
+        if (index >= 0) {
+            return `${account.name}, address /${ index }`;
         }
     }
     return "Account";

@@ -4,7 +4,7 @@ import Home from './HomeComponent';
 import Send from './SendComponent';
 import Log from './LogComponent';
 
-const TREZOR_FIRMWARE = '1.5.1';
+const TREZOR_FIRMWARE = '1.6.3';
 const INPUT_LIMIT = 350;
 
 export default class App extends Component {
@@ -53,7 +53,7 @@ export default class App extends Component {
                     for (i = 0 ; i < len; i++) {
                         unspent = account.info.utxos[i];
                         // at least 1 confirmation
-                        if (lastBlockHeight - unspent.height > 0) {
+                        if (lastBlockHeight - unspent.height >= 0) {
                             account.available += unspent.value;
                             availableUnspents.push(unspent);
                         } else {
@@ -76,7 +76,8 @@ export default class App extends Component {
                 for (let f in response.fees) {
                     fees.push({
                         name: f,
-                        maxFee: response.fees[f]
+                        // maxFee: response.fees[f]
+                        maxFee: 1
                     })
                 }
                 fees.reverse();
@@ -127,8 +128,11 @@ export default class App extends Component {
         const { originAccount, destinationAccount, accounts, activeAccount, trezorAccounts } = this.state;
 
         let index = -1;
+        let addressIndex = -1;
         for (let [i, a] of trezorAccounts.entries()) {
-            if (a.address === address) {
+            addressIndex = a.unusedAddresses.indexOf(address);
+            if (addressIndex >= 0) {
+                addressIndex += a.usedAddressIndex;
                 index = i;
                 break;
             }
@@ -136,9 +140,10 @@ export default class App extends Component {
 
         if (index >= 0) {
             const addr = trezorAccounts[index];
+            const path = addr.basePath.concat([0, addressIndex]);
             const account = accounts[activeAccount];
             const isSegwit = destinationAccount.id === 'btcX' || originAccount.id.indexOf('btg') >= 0 ? true : account.segwit;
-            TrezorConnect.getAddress(addr.path, originAccount.txType, isSegwit, (response) => {
+            TrezorConnect.getAddress(path, originAccount.txType, isSegwit, (response) => {
                 //console.log("TrezorConnect.getAddress response", response);
             });
         }

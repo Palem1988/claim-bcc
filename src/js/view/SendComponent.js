@@ -1,13 +1,15 @@
 import { h, Component } from 'preact';
 import bitcoinjs from 'bitcoinjs-lib';
+import bchaddrjs from 'bchaddrjs';
 import { satoshi2btc, getValidInputs, calculateFee, isTrezorAccount, trezorAccountLabel } from '../utils/utils';
 import Message from './MessageComponent';
 import SelectComponent from './SelectComponent';
 
 const initalState = {
     accountId: -1,
-    advanced: false,
+    advanced: true,
     address: undefined,
+    cashAddress: undefined,
     addressIsValid: true,
     addressFromTrezor: true,
     addressDropdownAvailable: true,
@@ -60,6 +62,7 @@ export default class SendComponent extends Component {
         return {
             accountId: props.account.id,
             address: address,
+            cashAddress: bchaddrjs.toCashAddress(address),
             addressIsValid: addressIsValid,
             advanced: props.useTrezorAccounts ? advanced : true,
             selectedFee: selectedFee,
@@ -71,8 +74,7 @@ export default class SendComponent extends Component {
         let value = event.currentTarget.selectedIndex;
         this.setState({
             selectedFee: value,
-            // fee: calculateFee(this.props.account.unspents.length, 1, this.props.fees[ value ].maxFee)
-            fee: calculateFee(this.props.account.unspents.length, 1, 1)
+            fee: calculateFee(this.props.account.unspents.length, 1, this.props.fees[ value ].maxFee)
         });
     }
 
@@ -90,6 +92,7 @@ export default class SendComponent extends Component {
 
         this.setState({
             address: value,
+            cashAddress: typeof valid !== 'undefined' ? bchaddrjs.toCashAddress(value) : undefined,
             addressIsValid: typeof valid !== 'undefined',
             addressFromTrezor: fromTrezor,
             addressDropdownAvailable: fromTrezor
@@ -97,8 +100,11 @@ export default class SendComponent extends Component {
     }
 
     resetAddress() {
+        const address = this.props.trezorAccounts.length > 0 ? this.props.trezorAccounts[0].address : "";
+        const cashAddress = address.length > 0 ? bchaddrjs.toCashAddress(address) : undefined;
         this.setState({
-            address: this.props.trezorAccounts.length > 0 ? this.props.trezorAccounts[0].address : "",
+            address,
+            cashAddress,
             addressIsValid: true,
             addressFromTrezor: true,
             addressDropdownAvailable: true,
@@ -118,6 +124,7 @@ export default class SendComponent extends Component {
     selectAddress(addr) {
         this.setState({
             address: addr,
+            cashAddress: bchaddrjs.toCashAddress(addr),
             addressDropdownOpened: false
         });
     }
@@ -140,7 +147,7 @@ export default class SendComponent extends Component {
 
     render(props) {
 
-        const { accountId, advanced, address, addressIsValid, addressFromTrezor, addressDropdownAvailable, addressDropdownOpened, selectedFee, fee } = this.state;
+        const { accountId, advanced, address, cashAddress, addressIsValid, addressFromTrezor, addressDropdownAvailable, addressDropdownOpened, selectedFee, fee } = this.state;
 
         // no account is set in state yet, don't render anything...
         if(accountId < 0) return null;
@@ -186,10 +193,10 @@ export default class SendComponent extends Component {
             formClassName = useTrezorAccounts ? 'not-valid' : 'not-valid not-bch-account';
         } else if (useTrezorAccounts) {
             if (!addressFromTrezor) {
-                addressHint = 'Not a TREZOR account, please double check it!';
+                addressHint = 'Not a Trezor account, please double check it!';
                 formClassName = 'foreign-address';
             } else {
-                addressHint = `${ originAccount.simpleName } ${ trezorAccountLabel(trezorAccounts, address) } in TREZOR`;
+                addressHint = `${ originAccount.simpleName } ${ trezorAccountLabel(trezorAccounts, address) } in Trezor`;
                 formClassName = 'valid';
             }
         } else {
@@ -243,14 +250,20 @@ export default class SendComponent extends Component {
                         <a href="#" onClick={ event => this.toggleAdvanced(event) }>{ advancedSettingsButtonLabel }</a>
                     </div>
                     <div className={ advancedSettingsClassName }>
-                        <p>
+                        <p className="cashaddr-hint">
+                            Please note that this tool only accepts addresses in the legacy format.
+                        </p>
+                        <p className="cashaddr-converter">
+                            Use the <a href="https://cashaddr.bitcoincash.org/" target="_blank" rel="noreferrer noopener">address converter</a> to convert the address from cashaddr to legacy format.
+                        </p>
+                        <p className="input-row">
                             <label className="targetAddressLabel" for="address">Target Address</label>
                             <span className="address-input">
                                 <input 
                                     id="address" 
                                     type="text" 
-                                    placeholder="Please make sure it's a BCH address!" 
-                                    value={ this.state.address }
+                                    placeholder="Please make sure it's a legacy BCH address!" 
+                                    value={ address }
                                     autocomplete="off"
                                     autocorrect="off"
                                     autocapitalize="off" 
@@ -260,16 +273,37 @@ export default class SendComponent extends Component {
                                     onInput={ event => this.onAddressChange(event) } />
                                 { addressDropdown }
                                 <button onClick={ () => this.resetAddress() }>
-                                    <span>Set address from TREZOR</span>
+                                    <span>Set address from Trezor</span>
                                 </button>
                             </span>
-                            <div className="verify-address-button" onClick={ () => props.verifyAddress(address) }>
-                                <div className="verify-address-tooltip">Show address on TREZOR</div>
-                            </div>
                             <span className="address-hint">
                                 { addressHint }
                             </span>
                         </p>
+                        {
+                            cashAddress ? (
+                                <p className="cashaddr-row">
+                                    <label className="targetAddressLabel">Converted address</label>
+                                    <span className="cashaddr-input">
+                                        <input 
+                                            type="text"
+                                            value={ cashAddress }
+                                            disabled="disabled"
+                                        />
+                                    </span>
+                                    {
+                                        addressFromTrezor ? (
+                                            <span className="verify-address-hint">
+                                                Please verify the converted cashaddr by clicking on the eye icon and checking the address on your Trezor device.
+                                                <div className="verify-address-button" onClick={ () => props.verifyAddress(address) }>
+                                                    <div className="verify-address-tooltip">Show address on Trezor</div>
+                                                </div>
+                                            </span>
+                                        ) : null
+                                    }
+                                </p>
+                            ) : null
+                        }
                         <p>
                             <label>Amount</label>
                             <input type="text" value={ amountToClaimString } disabled />
