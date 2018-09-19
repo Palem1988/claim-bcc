@@ -157,6 +157,32 @@
             }
         }
 
+        .cashaddr-hint {
+            padding-left: 17%;
+            font-size: 12px;
+            color: @color_orange;
+            &:before {
+                .glyphicon-info;
+                vertical-align: -2px;
+                margin-right: 8px;
+                font-size: 14px;
+            }
+        }
+
+        .cashaddr-converter {
+            padding-left: 17%;
+            font-size: 12px;
+            padding-bottom: 10px;
+            a {
+                color: @color_green;
+            }
+        }
+
+        .input-row, 
+        .cashaddr-row {
+            padding-bottom: 0px;
+        }
+
         span {
             margin-left: 15px;
             font-size: 12px;
@@ -200,6 +226,13 @@
                 margin-top: 1px;
                 padding-bottom: 10px;
             }
+
+            &.verify-address-hint {
+                display: block;
+                margin-left: 17%;
+                margin-top: 1px;
+                padding-bottom: 10px;
+            }
             
             &.amount-hint {
                 position: relative;
@@ -235,6 +268,13 @@
                     .amount-tooltip {
                         display: block;
                     }
+                }
+            }
+
+            &.cashaddr-input {
+                margin: 0px;
+                input {
+                    width: 550px;
                 }
             }
 
@@ -322,6 +362,12 @@
             }
             .address-hint {
                 color: @color_orange;
+                margin-bottom: 0px;
+                margin-top: 10px;
+            }
+
+            .cashaddr-row {
+                padding-bottom: 10px;
             }
         }
         
@@ -341,6 +387,8 @@
 
             .address-hint {
                 color: @color_red;
+                margin-bottom: 0px;
+                margin-top: 10px;
             }
         }
 
