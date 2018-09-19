@@ -16,7 +16,9 @@
         "build": "rm -rf build && webpack --config ./webpack/webpack.config.prod.babel.js",
         "test": ""
     },
-    "dependencies": {},
+    "dependencies": {
+        "bchaddrjs": "^0.2.2"
+    },
     "devDependencies": {
         "babel-cli": "^6.24.1",
         "babel-loader": "^7.1.0",
